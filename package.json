@@ -1,0 +1,25 @@
+{
+  "name": "ratatooey",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Discord bot that provides Secret Santa selection utilities.",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": ""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.8.0",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.9.2"
+  }
+}
