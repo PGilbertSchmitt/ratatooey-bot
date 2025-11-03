@@ -22,6 +22,10 @@ const NEW_ROTATION_COMMAND: Command = {
         name: 'Manual',
         value: 'manual',
       },
+      {
+        name: 'Automagic',
+        value: 'magic',
+      },
     ],
   }],
 };

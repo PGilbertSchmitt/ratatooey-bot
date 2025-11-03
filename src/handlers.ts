@@ -1,7 +1,5 @@
 import {
   ButtonStyleTypes,
-  InteractionResponseFlags,
-  InteractionResponseType,
   MessageComponentTypes,
 } from "discord-interactions";
 import {
@@ -9,10 +7,12 @@ import {
   wrapChannelMessage,
 } from "./types/interaction-response-types";
 import { BaseInteraction, CommandInteraction, MessageComponentInteraction } from "./types/interaction-types";
-import { Endpoints, Env, Names } from "./consts";
-import { discordRequest, hasAdminPermissions } from "./utils";
+import { Names } from "./consts";
+import { hasAdminPermissions } from "./utils";
 
 // TODO: Replace these with a SQLite DB connection
+
+type RotationType =  "auto" | "manual" | "magic";
 
 let rotations: Array<{
   interactionId: string; // primary id
@@ -24,7 +24,7 @@ let rotations: Array<{
     receiver: string;
   }>;
   filling: boolean;
-  type: "auto" | "manual";
+  type: RotationType;
 }> = [];
 
 const selectStartedRotations = (guildId: string) => {
@@ -52,9 +52,9 @@ export const handleNewRotation = async (
     return textMessage('No guild ID found for this server');
   }
 
-  const rotationType = body.data.options[0].value as "auto" | "manual";
-  if (rotationType !== "auto" && rotationType !== "manual") {
-    return textMessage(`Rotation type can only be 'auto' or 'manual', got '${rotationType}'`);
+  const rotationType = body.data.options[0].value as RotationType;
+  if (!["auto", "manual", "magic"].includes(rotationType)) {
+    return textMessage(`Rotation type can only be 'auto', 'manual', or 'magic'. Instead, got '${rotationType}'`);
   }
 
   if (selectStartedRotations(guildId)) {
@@ -72,6 +72,10 @@ export const handleNewRotation = async (
   });
 
   return wrapChannelMessage([
+    {
+      type: MessageComponentTypes.TEXT_DISPLAY,
+      content: `<@${userId}> has started ${rotationType === 'auto' ? 'an' : 'a'} ${rotationType} rotation`,
+    },
     {
       type: MessageComponentTypes.ACTION_ROW,
       components: [

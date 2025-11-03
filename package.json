@@ -9,6 +9,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "proxy": "ngrok http 9001",
+    "select": "tsx src/user-graph.ts",
     "register": "tsx src/register-commands.ts"
   },
   "keywords": [],
@@ -19,11 +20,13 @@
     "discord-interactions": "^4.4.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "ramda": "^0.32.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
-    "@types/node": "^24.9.2"
+    "@types/node": "^24.9.2",
+    "@types/ramda": "^0.31.1"
   }
 }
