@@ -6,15 +6,19 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": ""
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "proxy": "ngrok http 9001",
+    "register": "tsx src/register-commands.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
+    "discord-interactions": "^4.4.0",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
