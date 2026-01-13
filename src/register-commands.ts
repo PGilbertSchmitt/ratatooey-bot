@@ -40,16 +40,28 @@ const DELETE_ACTIVE_ROTATION_COMMAND: Command = {
   contexts: [0],
 };
 
+const SHOW_ACTIVE_ROTATION_COMMAND: Command = {
+  name: Names.SHOW_ROTATION,
+  type: CommandType.CHAT_INPUT,
+  description: 'Show the active rotation for this server',
+  integration_types: [0],
+  contexts: [0],
+};
+
 const registerCommands = async (commands: Array<Command>) => {
   try {
     const res = await discordRequest(Endpoints.COMMAND, {
       method: "PUT",
       body: commands,
     });
-    console.log(res);
+    console.log('Commands registered');
   } catch (err) {
     console.error(`Failed to register commands:\n\n${err}`);
   }
 };
 
-registerCommands([NEW_ROTATION_COMMAND, DELETE_ACTIVE_ROTATION_COMMAND]);
+registerCommands([
+  NEW_ROTATION_COMMAND,
+  DELETE_ACTIVE_ROTATION_COMMAND,
+  SHOW_ACTIVE_ROTATION_COMMAND,
+]);

@@ -51,13 +51,16 @@ class Client {
       selectionType,
       initiatorId,
       guildId,
-      "@@", // needs to be filled in later
+      "@@", // needs to be filled in by `saveMessageId` which is called immediately afterwards
       0,
     );
   }
 
   async deleteRotation(id: string) {
-    await this._run('DELETE FROM rotations WHERE id = ?', id);
+    await Promise.all([
+      this._run('DELETE FROM rotations WHERE id = ?', id),
+      this._run('DELETE FROM memberships WHERE rotation_id = ?', id),
+    ]);
   }
 
   async saveMessageId(id: string, messageId: string) {
@@ -79,6 +82,16 @@ class Client {
   async getStartedRotation(guildId: string) {
     return this._get(
       'SELECT * FROM rotations WHERE guild_id = ? AND done = 0',
+      this.mapRotation,
+      guildId,
+    );
+  }
+
+  async mostRecentRotation(
+    guildId: string,
+  ) {
+    return await this._get(
+      'SELECT * FROM rotations WHERE guild_id = ? ORDER BY created_at DESC LIMIT 1',
       this.mapRotation,
       guildId,
     );

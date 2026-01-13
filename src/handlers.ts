@@ -1,4 +1,4 @@
-import { ButtonStyleTypes, InteractionResponseFlags, InteractionResponseType, MessageComponent, MessageComponentTypes } from "discord-interactions";
+import { ButtonStyleTypes, MessageComponent, MessageComponentTypes } from "discord-interactions";
 import {
   InteractionResponse,
   wrapChannelMessage,
@@ -83,7 +83,7 @@ const rotationMessage = (
   };
   
   let components: MessageComponent[] = [topText];
-  if (members) {
+  if (members && members.length > 0) {
     const memberIds = members.map(id => `<@${id}>`);
     let memberString;
     switch (memberIds.length) {
@@ -144,15 +144,54 @@ export const handleNewRotation = async (
   return wrapChannelMessage(rotationMessage(userId, selectionType, interactionId));
 };
 
-export const handleMessageId = async (body: BaseInteraction) => {
+export const handleMessageId = async (token: string, rotationId: string) => {
   const followUpResponse = await discordRequest(
-    Endpoints.FOLLOW_UP(body.token),
+    Endpoints.FOLLOW_UP(token),
     {
       method: "GET",
     },
   );
   const followUp = await followUpResponse.json();
-  await db.saveMessageId(body.id, followUp.id);
+  await db.saveMessageId(rotationId, followUp.id);
+};
+
+type ShowAction = {
+  response: InteractionResponse;
+  oldMessageId: string;
+  rotationId: string;
+};
+
+export const handleShowRotation = async (body: BaseInteraction): Promise<ShowAction> => {
+  const guildId = getGuildId(body);
+  const currentRotation = await db.mostRecentRotation(guildId);
+  if (!currentRotation) {
+    throw new StructuredErrorResponse('No previous rotations exist in this channel.');
+  }
+  const { id, done, messageId, initiatorId, selectionType } = currentRotation;
+  const members = await db.getMembers(currentRotation.id);
+  if (done) {
+    return {
+      rotationId: id,
+      oldMessageId: messageId,
+      response: wrapChannelMessage([
+        {
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content: `TODO`,
+        }
+      ]),
+    };
+  } else {
+    return {
+      rotationId: id,
+      oldMessageId: messageId,
+      response: wrapChannelMessage(rotationMessage(
+        initiatorId,
+        selectionType,
+        id,
+        members,
+      )),
+    };
+  }
 };
 
 type DeleteAction = {

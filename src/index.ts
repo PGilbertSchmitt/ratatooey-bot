@@ -1,5 +1,4 @@
 import {
-  InteractionResponseFlags,
   InteractionResponseType,
   InteractionType,
   verifyKeyMiddleware,
@@ -12,6 +11,7 @@ import {
   handleJoinRotation,
   handleMessageId,
   handleNewRotation,
+  handleShowRotation,
   handleStartRotation,
   StructuredErrorResponse,
 } from "./handlers";
@@ -38,19 +38,22 @@ app.post(
             case Names.NEW_ROTATION: {
               const interaction = await handleNewRotation(body);
               res.send(interaction);
-              await handleMessageId(body);
+              await handleMessageId(body.token, body.id);
+              return;
+            }
+            case Names.SHOW_ROTATION: {
+              const { rotationId, oldMessageId, response } = await handleShowRotation(body);
+              res.send(response);
+              await handleMessageId(body.token, rotationId);
+              // If the old message exists, the interactions will no longer work, so delete it
+              await tryDeleteMessage(body.token, oldMessageId);
               return;
             }
             case Names.DELETE_ACTIVE_ROTATION: {
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
               if (interaction.messageId) {
-                await discordRequest(
-                  Endpoints.MESSAGE(body.token, interaction.messageId),
-                  {
-                    method: "DELETE",
-                  },
-                );
+                await tryDeleteMessage(body.token, interaction.messageId);
               }
               return;
             }
@@ -77,12 +80,7 @@ app.post(
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
               if (interaction.messageId) {
-                await discordRequest(
-                  Endpoints.MESSAGE(body.token, interaction.messageId),
-                  {
-                    method: "DELETE",
-                  },
-                );
+                await tryDeleteMessage(body.token, interaction.messageId);
               }
               return;
             }
@@ -100,16 +98,11 @@ app.post(
         }
       }
     } catch (err) {
-      console.log('Ere?');
       if (err instanceof StructuredErrorResponse) {
+        console.log('Structured Error:', err.message);
         res.send(err.toDiscordMessage());
         if (err.discordMessageId && 'message' in body) {
-          await discordRequest(
-            Endpoints.MESSAGE(body.token, body.message.id),
-            {
-              method: "DELETE",
-            },
-          );
+          await tryDeleteMessage(body.token, body.message.id);
         }
       } else {
         console.error("Failure while handling interaction:", err);
@@ -120,6 +113,17 @@ app.post(
     }
   },
 );
+
+const tryDeleteMessage = async (token: string, messageId: string) => {
+  try {
+    await discordRequest(
+      Endpoints.MESSAGE(token, messageId),
+      {
+        method: "DELETE",
+      },
+    );
+  } catch (_) {}
+}
 
 app.listen(PORT, () => {
   console.log("Listening on port", PORT);
