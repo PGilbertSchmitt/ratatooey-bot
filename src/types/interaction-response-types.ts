@@ -17,9 +17,9 @@ export const wrapChannelMessage = (
   components: MessageComponent[],
   ephemeral = false,
 ): InteractionResponse => {
-  const flags = InteractionResponseFlags.IS_COMPONENTS_V2 | (
-    ephemeral ? InteractionResponseFlags.EPHEMERAL : 0
-  );
+  const flags =
+    InteractionResponseFlags.IS_COMPONENTS_V2 |
+    (ephemeral ? InteractionResponseFlags.EPHEMERAL : 0);
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -28,4 +28,4 @@ export const wrapChannelMessage = (
       components,
     },
   };
-}
+};

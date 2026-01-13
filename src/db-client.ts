@@ -40,16 +40,13 @@ class Client {
       selectionType,
       initiatorId,
       guildId,
-      '@@', // needs to be filled in later
+      "@@", // needs to be filled in later
       0,
     );
   }
 
   async deleteRotation(id: string) {
-    await this._rotationRun(
-      `DELETE FROM rotations WHERE id = ?`,
-      id,
-    );
+    await this._rotationRun(`DELETE FROM rotations WHERE id = ?`, id);
   }
 
   async saveMessageId(id: string, messageId: string) {
@@ -63,12 +60,18 @@ class Client {
   async getRotation(id: string) {
     return this._rotationGet(`SELECT * FROM rotations WHERE id = ?`, id);
   }
-  
+
   async getStartedRotation(guildId: string) {
-    return this._rotationGet(`SELECT * FROM rotations WHERE guild_id = ? AND done = 0`, guildId);
+    return this._rotationGet(
+      `SELECT * FROM rotations WHERE guild_id = ? AND done = 0`,
+      guildId,
+    );
   }
 
-  private async _rotationGet(query: string, ...params: unknown[]): Promise<Rotation | null> {
+  private async _rotationGet(
+    query: string,
+    ...params: unknown[]
+  ): Promise<Rotation | null> {
     return await new Promise((res, rej) => {
       this.db.get(query, ...params, (err: unknown, data: any) => {
         if (err) {
@@ -94,13 +97,9 @@ class Client {
 
   private async _rotationRun(query: string, ...params: unknown[]) {
     await new Promise<void>((res, rej) => {
-      this.db.run(
-        query,
-        ...params,
-        (err: unknown) => {
-          err ? rej(err) : res();
-        }
-      );
+      this.db.run(query, ...params, (err: unknown) => {
+        err ? rej(err) : res();
+      });
     });
   }
 }

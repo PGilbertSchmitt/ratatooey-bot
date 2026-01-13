@@ -1,14 +1,14 @@
 import { min, reduce, sort, toPairs } from "ramda";
 
 const PRIOR_SELECTIONS: Array<[string, string]> = [
-  ['alice', 'bob'],
-  ['alice', 'carol'],
-  ['alice', 'eve'],
-  ['alice', 'dave'],
-  ['bob', 'carol'],
-  ['bob', 'dave'],
-  ['carol', 'eve'],
-  ['eve', 'alice'],
+  ["alice", "bob"],
+  ["alice", "carol"],
+  ["alice", "eve"],
+  ["alice", "dave"],
+  ["bob", "carol"],
+  ["bob", "dave"],
+  ["carol", "eve"],
+  ["eve", "alice"],
 ];
 
 type Tallies = Record<string, Record<string, number>>;
@@ -21,7 +21,7 @@ const bestSelection = (
   priorSelections: Array<[string, string]>,
 ) => {
   const tallies: Tallies = {};
-  
+
   for (const from of userPool) {
     tallies[from] = {};
     for (const to of userPool) {
@@ -32,17 +32,14 @@ const bestSelection = (
   }
 
   for (const [from, to] of priorSelections) {
-    if (tallies[from] && (tallies[from][to] !== undefined)) {
+    if (tallies[from] && tallies[from][to] !== undefined) {
       tallies[from][to]++;
     }
   }
 
   const invertedTallies = invertTally(tallies);
 
-  const priorityComparator = (
-    a: string,
-    b: string,
-  ): number => {
+  const priorityComparator = (a: string, b: string): number => {
     const aTally = invertedTallies[a];
     const bTally = invertedTallies[b];
     const aLowestCount = lowest(Array.from(aTally.keys()));
@@ -64,9 +61,7 @@ const bestSelection = (
   console.log(results);
 };
 
-const invertTally = (
-  tallies: Tallies,
-) => {
+const invertTally = (tallies: Tallies) => {
   const output: InvertedTallies = {};
   for (const [from, tally] of toPairs(tallies)) {
     const reverseTally = new Map<number, string[]>();
@@ -79,4 +74,4 @@ const invertTally = (
   return output;
 };
 
-bestSelection(['eve', 'carol', 'alice', 'bob', 'dave', ], PRIOR_SELECTIONS);
+bestSelection(["eve", "carol", "alice", "bob", "dave"], PRIOR_SELECTIONS);

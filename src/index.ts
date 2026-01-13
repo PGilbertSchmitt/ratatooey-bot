@@ -44,9 +44,12 @@ app.post(
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
               if (interaction.messageId) {
-                await discordRequest(Endpoints.MESSAGE(body.token, interaction.messageId), {
-                  method: 'DELETE',
-                });
+                await discordRequest(
+                  Endpoints.MESSAGE(body.token, interaction.messageId),
+                  {
+                    method: "DELETE",
+                  },
+                );
               }
               return;
             }
@@ -73,18 +76,19 @@ app.post(
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
               if (interaction.deleteIfCan) {
-                await discordRequest(Endpoints.MESSAGE(body.token, body.message.id), {
-                  method: 'DELETE',
-                });
+                await discordRequest(
+                  Endpoints.MESSAGE(body.token, body.message.id),
+                  {
+                    method: "DELETE",
+                  },
+                );
               }
               return;
             }
             default: {
-              return res
-                .status(404)
-                .json({
-                  error: `Unknown message component ${body.data.custom_id}`,
-                });
+              return res.status(404).json({
+                error: `Unknown message component ${body.data.custom_id}`,
+              });
             }
           }
         }
@@ -100,7 +104,7 @@ app.post(
         .status(500)
         .json({ error: "unexpected error while processing interaction" });
     }
-  }
+  },
 );
 
 app.listen(PORT, () => {

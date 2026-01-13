@@ -38,7 +38,7 @@ export interface CommandInteraction extends BaseInteraction {
       // granularity right now
       type: ValueOf<typeof CommandOptionType>;
       value: string;
-    }>
+    }>;
   };
 }
 
@@ -51,7 +51,7 @@ export interface MessageComponentInteraction extends BaseInteraction {
       custom_id: string;
       values?: string[];
     }>;
-  }
+  };
 }
 
 export type InteractionBody =
