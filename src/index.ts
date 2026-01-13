@@ -13,6 +13,7 @@ import {
   handleMessageId,
   handleNewRotation,
   handleStartRotation,
+  StructuredErrorResponse,
 } from "./handlers";
 import { discordRequest } from "./utils";
 
@@ -67,7 +68,7 @@ app.post(
           const [actionName, rotationId] = body.data.custom_id.split(":");
           switch (actionName) {
             case Names.ACTION_JOIN_ROTATION: {
-              return res.send(await handleJoinRotation(body));
+              return res.send(await handleJoinRotation(body, rotationId));
             }
             case Names.ACTION_START_ROTATION: {
               return res.send(await handleStartRotation(body));
@@ -75,9 +76,9 @@ app.post(
             case Names.DELETE_ACTIVE_ROTATION: {
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
-              if (interaction.deleteIfCan) {
+              if (interaction.messageId) {
                 await discordRequest(
-                  Endpoints.MESSAGE(body.token, body.message.id),
+                  Endpoints.MESSAGE(body.token, interaction.messageId),
                   {
                     method: "DELETE",
                   },
@@ -99,10 +100,23 @@ app.post(
         }
       }
     } catch (err) {
-      console.error("Failure while handling interaction:", err);
-      return res
-        .status(500)
-        .json({ error: "unexpected error while processing interaction" });
+      console.log('Ere?');
+      if (err instanceof StructuredErrorResponse) {
+        res.send(err.toDiscordMessage());
+        if (err.discordMessageId && 'message' in body) {
+          await discordRequest(
+            Endpoints.MESSAGE(body.token, body.message.id),
+            {
+              method: "DELETE",
+            },
+          );
+        }
+      } else {
+        console.error("Failure while handling interaction:", err);
+        return res
+          .status(500)
+          .json({ error: "unexpected error while processing interaction" });
+      }
     }
   },
 );
