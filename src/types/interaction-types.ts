@@ -1,6 +1,6 @@
-import { InteractionType, MessageComponentTypes } from "discord-interactions";
-import { ValueOf } from "../utils";
-import { CommandOptionType, CommandType, ContextType } from "./command-types";
+import { InteractionType, MessageComponentTypes } from 'discord-interactions';
+import { ValueOf } from '../utils';
+import { CommandOptionType, CommandType, ContextType } from './command-types';
 
 export interface BaseInteraction {
   id: string;

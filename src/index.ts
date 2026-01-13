@@ -2,10 +2,10 @@ import {
   InteractionResponseType,
   InteractionType,
   verifyKeyMiddleware,
-} from "discord-interactions";
-import express from "express";
-import { InteractionBody } from "./types/interaction-types";
-import { Endpoints, Env, Names } from "./consts";
+} from 'discord-interactions';
+import express from 'express';
+import { InteractionBody } from './types/interaction-types';
+import { Endpoints, Env, Names } from './consts';
 import {
   handleDeleteRotation,
   handleJoinRotation,
@@ -14,14 +14,14 @@ import {
   handleShowRotation,
   handleStartRotation,
   StructuredErrorResponse,
-} from "./handlers";
-import { discordRequest } from "./utils";
+} from './handlers';
+import { discordRequest } from './utils';
 
 const PORT = Env.PORT || 3000;
 const app = express();
 
 app.post(
-  "/interactions",
+  '/interactions',
   verifyKeyMiddleware(Env.PUBLIC_KEY),
   async (req, res) => {
     const body = req.body as InteractionBody;
@@ -42,7 +42,8 @@ app.post(
               return;
             }
             case Names.SHOW_ROTATION: {
-              const { rotationId, oldMessageId, response } = await handleShowRotation(body);
+              const { rotationId, oldMessageId, response } =
+                await handleShowRotation(body);
               res.send(response);
               await handleMessageId(body.token, rotationId);
               // If the old message exists, the interactions will no longer work, so delete it
@@ -68,7 +69,7 @@ app.post(
 
         case InteractionType.MESSAGE_COMPONENT: {
           console.log(`[INTERACTION]: ${JSON.stringify(body.data)}`);
-          const [actionName, rotationId] = body.data.custom_id.split(":");
+          const [actionName, rotationId] = body.data.custom_id.split(':');
           switch (actionName) {
             case Names.ACTION_JOIN_ROTATION: {
               return res.send(await handleJoinRotation(body, rotationId));
@@ -94,7 +95,7 @@ app.post(
 
         default: {
           console.error(`Unknown interaction type '${body.type}'`);
-          return res.status(400).json({ error: "unknown interaction type" });
+          return res.status(400).json({ error: 'unknown interaction type' });
         }
       }
     } catch (err) {
@@ -105,10 +106,10 @@ app.post(
           await tryDeleteMessage(body.token, body.message.id);
         }
       } else {
-        console.error("Failure while handling interaction:", err);
+        console.error('Failure while handling interaction:', err);
         return res
           .status(500)
-          .json({ error: "unexpected error while processing interaction" });
+          .json({ error: 'unexpected error while processing interaction' });
       }
     }
   },
@@ -116,15 +117,12 @@ app.post(
 
 const tryDeleteMessage = async (token: string, messageId: string) => {
   try {
-    await discordRequest(
-      Endpoints.MESSAGE(token, messageId),
-      {
-        method: "DELETE",
-      },
-    );
+    await discordRequest(Endpoints.MESSAGE(token, messageId), {
+      method: 'DELETE',
+    });
   } catch (_) {}
-}
+};
 
 app.listen(PORT, () => {
-  console.log("Listening on port", PORT);
+  console.log('Listening on port', PORT);
 });

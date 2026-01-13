@@ -1,11 +1,11 @@
-import Sqlite, { Database } from "sqlite3";
+import Sqlite, { Database } from 'sqlite3';
 
 type ValueOf<T> = T[keyof T];
 
 export const SelectionType = {
-  AUTO: "auto",
-  MANUAL: "manual",
-  MAGIC: "magic",
+  AUTO: 'auto',
+  MANUAL: 'manual',
+  MAGIC: 'magic',
 };
 
 export type SelectionType = ValueOf<typeof SelectionType>;
@@ -23,19 +23,19 @@ export type Rotation = {
 export type Member = {
   rotationId: string;
   memberId: string;
-}
+};
 
 export type MemberPair = {
   rotationId: string;
   giverId: string;
   receiverId: string;
-}
+};
 
 class Client {
   private db: Database;
 
   constructor() {
-    this.db = new Sqlite.Database("ratatooey.db");
+    this.db = new Sqlite.Database('ratatooey.db');
   }
 
   async createRotation(
@@ -51,7 +51,7 @@ class Client {
       selectionType,
       initiatorId,
       guildId,
-      "@@", // needs to be filled in by `saveMessageId` which is called immediately afterwards
+      '@@', // needs to be filled in by `saveMessageId` which is called immediately afterwards
       0,
     );
   }
@@ -87,9 +87,7 @@ class Client {
     );
   }
 
-  async mostRecentRotation(
-    guildId: string,
-  ) {
+  async mostRecentRotation(guildId: string) {
     return await this._get(
       'SELECT * FROM rotations WHERE guild_id = ? ORDER BY created_at DESC LIMIT 1',
       this.mapRotation,
@@ -102,7 +100,7 @@ class Client {
       'INSERT INTO memberships (rotation_id, member_id) VALUES (?, ?)',
       rotationId,
       memberId,
-    )
+    );
   }
 
   async getMembers(rotationId: string) {

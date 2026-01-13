@@ -2,7 +2,7 @@ import {
   InteractionResponseFlags,
   InteractionResponseType,
   MessageComponent,
-} from "discord-interactions";
+} from 'discord-interactions';
 
 export interface InteractionResponse {
   // Don't have any other types right now

@@ -1,14 +1,14 @@
-import { min, reduce, sort, toPairs } from "ramda";
+import { min, reduce, sort, toPairs } from 'ramda';
 
 const PRIOR_SELECTIONS: Array<[string, string]> = [
-  ["alice", "bob"],
-  ["alice", "carol"],
-  ["alice", "eve"],
-  ["alice", "dave"],
-  ["bob", "carol"],
-  ["bob", "dave"],
-  ["carol", "eve"],
-  ["eve", "alice"],
+  ['alice', 'bob'],
+  ['alice', 'carol'],
+  ['alice', 'eve'],
+  ['alice', 'dave'],
+  ['bob', 'carol'],
+  ['bob', 'dave'],
+  ['carol', 'eve'],
+  ['eve', 'alice'],
 ];
 
 type Tallies = Record<string, Record<string, number>>;
@@ -74,4 +74,4 @@ const invertTally = (tallies: Tallies) => {
   return output;
 };
 
-bestSelection(["eve", "carol", "alice", "bob", "dave"], PRIOR_SELECTIONS);
+bestSelection(['eve', 'carol', 'alice', 'bob', 'dave'], PRIOR_SELECTIONS);

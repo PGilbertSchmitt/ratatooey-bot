@@ -1,4 +1,4 @@
-import { ValueOf } from "../utils";
+import { ValueOf } from '../utils';
 
 export const ContextType = {
   GUILD: 0,

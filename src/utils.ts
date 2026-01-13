@@ -1,7 +1,7 @@
-import "dotenv/config";
-import { Env } from "./consts";
+import 'dotenv/config';
+import { Env } from './consts';
 
-type BodylessRequestInit = Omit<RequestInit, "body">;
+type BodylessRequestInit = Omit<RequestInit, 'body'>;
 export type CustomRequestInit = BodylessRequestInit & { body?: any };
 
 export const discordRequest = async (
@@ -9,16 +9,16 @@ export const discordRequest = async (
   options: CustomRequestInit,
 ) => {
   const url = `https://discord.com/api/v10/${endpoint}`;
-  if (options.body && typeof options.body !== "string") {
+  if (options.body && typeof options.body !== 'string') {
     options.body = JSON.stringify(options.body);
   }
 
   const res = await fetch(url, {
     headers: {
       Authorization: `Bot ${Env.DISCORD_TOKEN}`,
-      "Content-Type": "application/json; charset=UTF-8",
+      'Content-Type': 'application/json; charset=UTF-8',
       // Should replace when I get my own
-      "User-Agent": `DiscordBot (https://github.com/pgilbertschmitt/santa-bort, 1.0.0)`,
+      'User-Agent': `DiscordBot (https://github.com/pgilbertschmitt/santa-bort, 1.0.0)`,
     },
     ...options,
   });
