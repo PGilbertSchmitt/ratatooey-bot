@@ -15,7 +15,7 @@ export interface InteractionResponse {
 
 export const wrapChannelMessage = (
   components: MessageComponent[],
-  ephemeral = false
+  ephemeral = false,
 ): InteractionResponse => {
   const flags = InteractionResponseFlags.IS_COMPONENTS_V2 | (
     ephemeral ? InteractionResponseFlags.EPHEMERAL : 0

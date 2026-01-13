@@ -7,7 +7,13 @@ import {
 import express from "express";
 import { InteractionBody } from "./types/interaction-types";
 import { Endpoints, Env, Names } from "./consts";
-import { handleDeleteRotation, handleJoinRotation, handleNewRotation, handleStartRotation } from "./handlers";
+import {
+  handleDeleteRotation,
+  handleJoinRotation,
+  handleMessageId,
+  handleNewRotation,
+  handleStartRotation,
+} from "./handlers";
 import { discordRequest } from "./utils";
 
 const PORT = Env.PORT || 3000;
@@ -26,12 +32,23 @@ app.post(
         }
 
         case InteractionType.APPLICATION_COMMAND: {
+          console.log(`[COMMAND]: ${JSON.stringify(body.data)}`);
           switch (body.data.name) {
             case Names.NEW_ROTATION: {
-              return res.send(await handleNewRotation(body));
+              const interaction = await handleNewRotation(body);
+              res.send(interaction);
+              await handleMessageId(body);
+              return;
             }
             case Names.DELETE_ACTIVE_ROTATION: {
-              return res.send(await handleDeleteRotation(body));
+              const interaction = await handleDeleteRotation(body);
+              res.send(interaction.response);
+              if (interaction.messageId) {
+                await discordRequest(Endpoints.MESSAGE(body.token, interaction.messageId), {
+                  method: 'DELETE',
+                });
+              }
+              return;
             }
             default: {
               console.error(`Unknown command type '${body.data.name}'`);
@@ -43,7 +60,7 @@ app.post(
         }
 
         case InteractionType.MESSAGE_COMPONENT: {
-          console.log(body.data);
+          console.log(`[INTERACTION]: ${JSON.stringify(body.data)}`);
           const [actionName, rotationId] = body.data.custom_id.split(":");
           switch (actionName) {
             case Names.ACTION_JOIN_ROTATION: {
@@ -53,10 +70,13 @@ app.post(
               return res.send(await handleStartRotation(body));
             }
             case Names.DELETE_ACTIVE_ROTATION: {
-              res.send(await handleDeleteRotation(body));
-              await discordRequest(Endpoints.MESSAGE(body.token, body.message.id), {
-                method: 'DELETE',
-              });
+              const interaction = await handleDeleteRotation(body);
+              res.send(interaction.response);
+              if (interaction.deleteIfCan) {
+                await discordRequest(Endpoints.MESSAGE(body.token, body.message.id), {
+                  method: 'DELETE',
+                });
+              }
               return;
             }
             default: {
@@ -75,7 +95,7 @@ app.post(
         }
       }
     } catch (err) {
-      console.log("Failure while handling interaction:", err);
+      console.error("Failure while handling interaction:", err);
       return res
         .status(500)
         .json({ error: "unexpected error while processing interaction" });

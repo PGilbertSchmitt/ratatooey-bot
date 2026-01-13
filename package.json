@@ -9,6 +9,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "proxy": "ngrok http 9001",
+    "db:init": "sqlite3 ratatooey.db < init-db.sql",
+    "db:connect": "sqlite3 ratatooey.db",
     "select": "tsx src/user-graph.ts",
     "register": "tsx src/register-commands.ts"
   },
@@ -21,6 +23,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "ramda": "^0.32.0",
+    "sqlite3": "^5.1.7",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },

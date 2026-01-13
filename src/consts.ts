@@ -17,6 +17,7 @@ export const Names = {
 
 export const Endpoints = {
   COMMAND: `applications/${Env.APP_ID}/commands`,
+  FOLLOW_UP: (token: string) => `webhooks/${Env.APP_ID}/${token}/messages/@original`,
   MESSAGE: (token: string, messageId: string) =>
     `webhooks/${Env.APP_ID}/${token}/messages/${messageId}`,
 }
