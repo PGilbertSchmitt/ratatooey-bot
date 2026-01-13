@@ -2,12 +2,12 @@
 
 ## Deleting
 
-- [ ] Create, Delete (button) by same user [SUCCESS]
-- [ ] Create, Delete (command) by same user [SUCCESS]
-- [ ] Create, Delete (button) by admin [SUCCESS]
-- [ ] Create, Delete (command) by admin [SUCCESS]
-- [ ] Create, Delete (button) by different user (non-admin) [FAIL]
-- [ ] Create, Delete (command) by different user (non-admin) [FAIL]
+- [x] Create, Delete (button) by same user [SUCCESS]
+- [x] Create, Delete (command) by same user [SUCCESS]
+- [x] Create, Delete (button) by admin [SUCCESS]
+- [x] Create, Delete (command) by admin [SUCCESS]
+- [x] Create, Delete (button) by different user (non-admin) [FAIL]
+- [x] Create, Delete (command) by different user (non-admin) [FAIL]
 
 ## Joining
 
