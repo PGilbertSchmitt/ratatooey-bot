@@ -11,6 +11,7 @@ import {
   handleJoinRotation,
   handleMessageId,
   handleNewRotation,
+  handleRevealReceiver,
   handleShowRotation,
   handleStartRotation,
   StructuredErrorResponse,
@@ -75,15 +76,19 @@ app.post(
               return res.send(await handleJoinRotation(body, rotationId));
             }
             case Names.ACTION_START_ROTATION: {
-              return res.send(await handleStartRotation(body));
+              return res.send(await handleStartRotation(body, rotationId));
             }
             case Names.DELETE_ACTIVE_ROTATION: {
+              // Gets the rotation ID from the currently open rotation
               const interaction = await handleDeleteRotation(body);
               res.send(interaction.response);
               if (interaction.messageId) {
                 await tryDeleteMessage(body.token, interaction.messageId);
               }
               return;
+            }
+            case Names.ACTION_REVEAL_RECEIVER: {
+              return res.send(await handleRevealReceiver(body, rotationId))
             }
             default: {
               return res.status(404).json({

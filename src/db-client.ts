@@ -63,6 +63,10 @@ class Client {
     ]);
   }
 
+  async startRotation(id: string) {
+    await this._run('UPDATE rotations SET done = 1 WHERE id = ?', id);
+  }
+
   async saveMessageId(id: string, messageId: string) {
     await this._run(
       'UPDATE rotations SET message_id = ? WHERE id = ?',
@@ -97,17 +101,35 @@ class Client {
 
   async addMember(rotationId: string, memberId: string) {
     return this._run(
-      'INSERT INTO memberships (rotation_id, member_id) VALUES (?, ?)',
+      'INSERT INTO memberships (rotation_id, sender_id) VALUES (?, ?)',
       rotationId,
       memberId,
+    );
+  }
+
+  async addReceiver(rotationId: string, senderId: string, receiverId: string) {
+    return this._run(
+      'UPDATE memberships SET receiver_id = ? WHERE rotation_id = ? AND sender_id = ?',
+      receiverId,
+      rotationId,
+      senderId,
     );
   }
 
   async getMembers(rotationId: string) {
     return this._all(
       'SELECT * FROM memberships WHERE rotation_id = ?',
-      (row: any) => row.member_id as string,
+      (row: any) => row.sender_id as string,
       rotationId,
+    );
+  }
+
+  async getSenderReceiver(rotationId: string, senderId: string) {
+    return this._get(
+      'SELECT * FROM memberships WHERE rotation_id = ? AND sender_id = ?',
+      (row: any) => row.receiver_id as string,
+      rotationId,
+      senderId
     );
   }
 

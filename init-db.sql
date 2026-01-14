@@ -10,6 +10,6 @@ CREATE TABLE rotations (
 
 CREATE TABLE memberships (
     rotation_id TEXT REFERENCES rotations(id),
-    member_id TEXT NOT NULL,
-    other_member_id TEXT
+    sender_id TEXT NOT NULL,
+    receiver_id TEXT
 );

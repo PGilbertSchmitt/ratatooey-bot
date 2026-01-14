@@ -14,6 +14,7 @@ export const Names = {
   OPT_ROTATION_TYPE: 'rotation_type',
   ACTION_JOIN_ROTATION: 'join_rotation',
   ACTION_START_ROTATION: 'start_rotation',
+  ACTION_REVEAL_RECEIVER: 'reveal_receiver',
 } as const;
 
 export const Endpoints = {

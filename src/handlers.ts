@@ -49,10 +49,32 @@ const getGuildId = (body: BaseInteraction): string => {
   return guildId;
 };
 
+const getMembershipString = (memberIds?: string[]): string | null => {
+  if (!memberIds || memberIds.length === 0) {
+    return null;
+  }
+  const memberStrings = memberIds.map((id) => `<@${id}>`);
+  switch (memberStrings.length) {
+    case 1: {
+      return memberStrings[0];
+    }
+    case 2: {
+      return memberStrings.join(' and ');
+    }
+    default: {
+      const allButLast = memberStrings.slice(0, memberStrings.length - 1);
+      return [
+        ...allButLast,
+        `and ${memberStrings[memberStrings.length - 1]}`,
+      ].join(', ');
+    }
+  }
+};
+
 const rotationMessage = (
   initiatorId: string,
   selectionType: SelectionType,
-  interactionId: string,
+  rotationId: string,
   members?: string[],
 ): MessageComponent[] => {
   const topText: MessageComponent = {
@@ -66,20 +88,20 @@ const rotationMessage = (
     components: [
       {
         type: MessageComponentTypes.BUTTON,
-        custom_id: `${Names.ACTION_JOIN_ROTATION}:${interactionId}`,
+        custom_id: `${Names.ACTION_JOIN_ROTATION}:${rotationId}`,
         label: 'Join',
         style: ButtonStyleTypes.PRIMARY,
       },
       {
         type: MessageComponentTypes.BUTTON,
-        custom_id: `${Names.ACTION_START_ROTATION}:${interactionId}`,
+        custom_id: `${Names.ACTION_START_ROTATION}:${rotationId}`,
         label: 'Start',
         style: ButtonStyleTypes.SECONDARY,
         disabled: !startEnabled,
       },
       {
         type: MessageComponentTypes.BUTTON,
-        custom_id: `${Names.DELETE_ACTIVE_ROTATION}:${interactionId}`,
+        custom_id: `${Names.DELETE_ACTIVE_ROTATION}:${rotationId}`,
         label: 'Delete',
         style: ButtonStyleTypes.DANGER,
       },
@@ -87,30 +109,11 @@ const rotationMessage = (
   };
 
   let components: MessageComponent[] = [topText];
-  if (members && members.length > 0) {
-    const memberIds = members.map((id) => `<@${id}>`);
-    let memberString;
-    switch (memberIds.length) {
-      case 1: {
-        memberString = memberIds[0];
-        break;
-      }
-      case 2: {
-        memberString = memberIds.join(' and ');
-        break;
-      }
-      default: {
-        const allButLast = memberIds.slice(0, memberIds.length - 1);
-        memberString = [
-          ...allButLast,
-          `and ${memberIds[memberIds.length - 1]}`,
-        ].join(', ');
-        break;
-      }
-    }
+  const membershipString = getMembershipString(members);
+  if (membershipString !== null) {
     components.push({
       type: MessageComponentTypes.TEXT_DISPLAY,
-      content: `Currently includes: ${memberString}`,
+      content: `Currently includes: ${membershipString}`,
     });
   }
 
@@ -125,6 +128,33 @@ const rotationMessage = (
 
   return components;
 };
+
+const rotationDoneMessage = (
+  initiatorId: string,
+  selectionType: SelectionType,
+  rotationId: string,
+  members: string[],
+): MessageComponent[] => [
+  {
+    type: MessageComponentTypes.TEXT_DISPLAY,
+    content: `<@${initiatorId}> has started ${selectionType === 'auto' ? 'an' : 'a'} ${selectionType} rotation`,
+  },
+  {
+    type: MessageComponentTypes.TEXT_DISPLAY,
+    content: `Members in rotation: ${getMembershipString(members)}`,
+  },
+  {
+    type: MessageComponentTypes.ACTION_ROW,
+    components: [
+      {
+        type: MessageComponentTypes.BUTTON,
+        custom_id: `${Names.ACTION_REVEAL_RECEIVER}:${rotationId}`,
+        label: 'Reveal',
+        style: ButtonStyleTypes.PRIMARY,
+      },
+    ],
+  },
+];
 
 export const handleNewRotation = async (
   body: CommandInteraction,
@@ -245,7 +275,6 @@ export const handleJoinRotation = async (
   body: MessageComponentInteraction,
   rotationId: string,
 ): Promise<InteractionResponse> => {
-  const guildId = getGuildId(body);
   const userId = body.member.user.id;
   const currentRotation = await db.getRotation(rotationId);
   if (!currentRotation) {
@@ -277,19 +306,70 @@ export const handleJoinRotation = async (
 
 export const handleStartRotation = async (
   body: MessageComponentInteraction,
+  rotationId: string,
 ): Promise<InteractionResponse> => {
+  const userId = body.member.user.id;
+  const [currentRotation, members] = await Promise.all([
+    db.getRotation(rotationId),
+    db.getMembers(rotationId),
+  ]);
+  if (!currentRotation) {
+    throw new StructuredErrorResponse(
+      'Rotation does not exist',
+      body.message.id,
+    );
+  }
+  if (members.length < 3) {
+    throw new StructuredErrorResponse(
+      'Rotation does not have enough members (how did you even click the button??)',
+    );
+  }
+
+  const { id, initiatorId, selectionType } = currentRotation;
+
+  if (userId === initiatorId || hasAdminPermissions(body.member.permissions)) {
+    await db.startRotation(rotationId);
+
+    // TODO: Do the real rearranging here
+    const receivers = [...members];
+    const last = receivers.pop()!;
+    receivers.unshift(last);
+    await Promise.all(members.map((sender, i) => db.addReceiver(rotationId, sender, receivers[i])));
+    
+    return wrapChannelMessageUpdate(rotationDoneMessage(initiatorId, selectionType, id, members));
+  } else {
+    return wrapChannelMessage(
+      [
+        {
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content:
+            'Only the person who created this poll can start this rotation.',
+        },
+        {
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content:
+            'This is a blatant violation of server rules. This incident has been reported to the authorities.',
+        },
+      ],
+      true,
+    );
+  }
+};
+
+export const handleRevealReceiver = async (
+  body: MessageComponentInteraction,
+  rotationId: string,
+): Promise<InteractionResponse> => {
+  const userId = body.member.user.id;
+  const receiverId = await db.getSenderReceiver(rotationId, userId);
   return wrapChannelMessage(
     [
       {
         type: MessageComponentTypes.TEXT_DISPLAY,
-        content:
-          'Only the person who created this poll can start this rotation.',
-      },
-      {
-        type: MessageComponentTypes.TEXT_DISPLAY,
-        content:
-          'This is a blatant violation of server rules. This incident has been reported.',
-      },
+        content: receiverId
+          ? `Your recipient is <@${receiverId}>`
+          : 'You are not a member of this rotation',
+      }
     ],
     true,
   );
