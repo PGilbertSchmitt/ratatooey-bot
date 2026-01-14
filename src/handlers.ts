@@ -16,6 +16,7 @@ import {
 import { Endpoints, Names } from './consts';
 import { discordRequest, hasAdminPermissions } from './utils';
 import { db, SelectionType } from './db-client';
+import { autoSelection } from './selection';
 
 const textMessage = (content: string) =>
   wrapChannelMessage(
@@ -164,9 +165,17 @@ export const handleNewRotation = async (
   const guildId = getGuildId(body);
 
   const selectionType = body.data.options[0].value as SelectionType;
+  
   if (!['auto', 'manual', 'magic'].includes(selectionType)) {
     throw new StructuredErrorResponse(
       `Rotation type can only be 'auto', 'manual', or 'magic'. Instead, got '${selectionType}'`,
+    );
+  }
+
+  // Temp while they're implemented
+  if (selectionType !== 'auto') {
+    throw new StructuredErrorResponse(
+      `Currenly, only Automatic rotation is supported (check back soon!)`,
     );
   }
 
@@ -330,13 +339,19 @@ export const handleStartRotation = async (
   if (userId === initiatorId || hasAdminPermissions(body.member.permissions)) {
     await db.startRotation(rotationId);
 
-    // TODO: Do the real rearranging here
-    const receivers = [...members];
-    const last = receivers.pop()!;
-    receivers.unshift(last);
-    await Promise.all(members.map((sender, i) => db.addReceiver(rotationId, sender, receivers[i])));
-    
-    return wrapChannelMessageUpdate(rotationDoneMessage(initiatorId, selectionType, id, members));
+    switch (selectionType) {
+      case SelectionType.AUTO:
+        const selectedPairs = autoSelection(members);
+        await Promise.all(selectedPairs.map(([sender, receiver]) => db.addReceiver(rotationId, sender, receiver)));
+        return wrapChannelMessageUpdate(rotationDoneMessage(initiatorId, selectionType, id, members));
+      case SelectionType.MAGIC:
+      case SelectionType.MANUAL:
+        return wrapChannelMessageUpdate([{
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content:
+            'Not implemented yet, only Automatic selection is currently available.',
+        }]);
+    }
   } else {
     return wrapChannelMessage(
       [

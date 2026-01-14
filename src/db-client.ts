@@ -6,7 +6,7 @@ export const SelectionType = {
   AUTO: 'auto',
   MANUAL: 'manual',
   MAGIC: 'magic',
-};
+} as const;
 
 export type SelectionType = ValueOf<typeof SelectionType>;
 
