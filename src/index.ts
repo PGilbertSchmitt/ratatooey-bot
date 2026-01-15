@@ -11,6 +11,7 @@ import {
   handleJoinRotation,
   handleMessageId,
   handleNewRotation,
+  handleRevealAll,
   handleRevealReceiver,
   handleShowRotation,
   handleStartRotation,
@@ -30,7 +31,8 @@ app.post(
     try {
       switch (body.type) {
         case InteractionType.PING: {
-          return res.send({ type: InteractionResponseType.PONG });
+          res.send({ type: InteractionResponseType.PONG });
+          return;
         }
 
         case InteractionType.APPLICATION_COMMAND: {
@@ -59,6 +61,10 @@ app.post(
               }
               return;
             }
+            case Names.REVEAL_ALL: {
+              res.send(await handleRevealAll(body));
+              return;
+            }
             default: {
               console.error(`Unknown command type '${body.data.name}'`);
               return res
@@ -73,10 +79,12 @@ app.post(
           const [actionName, rotationId] = body.data.custom_id.split(':');
           switch (actionName) {
             case Names.ACTION_JOIN_ROTATION: {
-              return res.send(await handleJoinRotation(body, rotationId));
+              res.send(await handleJoinRotation(body, rotationId));
+              return;
             }
             case Names.ACTION_START_ROTATION: {
-              return res.send(await handleStartRotation(body, rotationId));
+              res.send(await handleStartRotation(body, rotationId));
+              return;
             }
             case Names.DELETE_ACTIVE_ROTATION: {
               // Gets the rotation ID from the currently open rotation
@@ -88,7 +96,8 @@ app.post(
               return;
             }
             case Names.ACTION_REVEAL_RECEIVER: {
-              return res.send(await handleRevealReceiver(body, rotationId))
+              res.send(await handleRevealReceiver(body, rotationId))
+              return;
             }
             default: {
               return res.status(404).json({

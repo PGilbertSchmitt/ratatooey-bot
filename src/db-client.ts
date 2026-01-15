@@ -1,6 +1,5 @@
 import Sqlite, { Database } from 'sqlite3';
-
-type ValueOf<T> = T[keyof T];
+import { ValueOf } from './utils';
 
 export const SelectionType = {
   AUTO: 'auto',
@@ -91,6 +90,14 @@ class Client {
     );
   }
 
+  async getLastInitiatedRotation(guildId: string) {
+    return this._get(
+      'SELECT * FROM rotations WHERE guild_id = ? AND done = 1 ORDER BY created_at DESC LIMIT 1',
+      this.mapRotation,
+      guildId,
+    );
+  }
+
   async mostRecentRotation(guildId: string) {
     return await this._get(
       'SELECT * FROM rotations WHERE guild_id = ? ORDER BY created_at DESC LIMIT 1',
@@ -130,6 +137,17 @@ class Client {
       (row: any) => row.receiver_id as string,
       rotationId,
       senderId
+    );
+  }
+
+  async getAllSenderReceviers(rotationId: string) {
+    return this._all(
+      'SELECT * FROM memberships WHERE rotation_id = ?',
+      (row: any) => ({
+        sender: row.sender_id as string,
+        receiver: row.receiver_id as string,
+      }),
+      rotationId,
     );
   }
 

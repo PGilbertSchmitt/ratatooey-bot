@@ -240,6 +240,42 @@ export const handleShowRotation = async (
   }
 };
 
+export const handleRevealAll = async (
+  body: BaseInteraction,
+): Promise<InteractionResponse> => {
+  if (!hasAdminPermissions(body.member.permissions)) {
+    return wrapChannelMessage([
+      {
+        type: MessageComponentTypes.TEXT_DISPLAY,
+        content: 'Only an Admin can reveal the full list of receivers.',
+      }
+    ], true);
+  }
+
+  const guildId = getGuildId(body);
+  const lastInitiatedRotation = await db.getLastInitiatedRotation(guildId);
+  if (!lastInitiatedRotation) {
+    return wrapChannelMessage([
+      {
+        type: MessageComponentTypes.TEXT_DISPLAY,
+        content: 'There are no inactive (started) rotations in the server.',
+      }
+    ], true);
+  }
+
+  const pairs = await db.getAllSenderReceviers(lastInitiatedRotation.id);
+  return wrapChannelMessage([
+    {
+      type: MessageComponentTypes.TEXT_DISPLAY,
+      content: "The most recently started rotation has these pairs (sender -> receiver):",
+    },
+    ...pairs.map(({ sender, receiver }): MessageComponent => ({
+      type: MessageComponentTypes.TEXT_DISPLAY,
+      content: `<@${sender}> -> <@${receiver}>`,
+    })),
+  ], true);
+}
+
 type DeleteAction = {
   response: InteractionResponse;
   messageId?: string;

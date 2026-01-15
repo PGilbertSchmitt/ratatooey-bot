@@ -11,6 +11,7 @@ export const Names = {
   NEW_ROTATION: 'new_rotation',
   DELETE_ACTIVE_ROTATION: 'delete_rotation',
   SHOW_ROTATION: 'show_rotation',
+  REVEAL_ALL: 'reveal_all',
   OPT_ROTATION_TYPE: 'rotation_type',
   ACTION_JOIN_ROTATION: 'join_rotation',
   ACTION_START_ROTATION: 'start_rotation',

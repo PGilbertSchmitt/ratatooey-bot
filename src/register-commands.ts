@@ -43,7 +43,15 @@ const DELETE_ACTIVE_ROTATION_COMMAND: Command = {
 const SHOW_ACTIVE_ROTATION_COMMAND: Command = {
   name: Names.SHOW_ROTATION,
   type: CommandType.CHAT_INPUT,
-  description: 'Show the active rotation for this server',
+  description: 'Show the active rotation for this server (in case it gets deleted)',
+  integration_types: [0],
+  contexts: [0],
+};
+
+const REVEAL_ALL_SELECTIONS_COMMAND: Command = {
+  name: Names.REVEAL_ALL,
+  type: CommandType.CHAT_INPUT,
+  description: 'Privately reveal the list of sender/receivers pairs for the most recently started rotation',
   integration_types: [0],
   contexts: [0],
 };
@@ -64,4 +72,5 @@ registerCommands([
   NEW_ROTATION_COMMAND,
   DELETE_ACTIVE_ROTATION_COMMAND,
   SHOW_ACTIVE_ROTATION_COMMAND,
+  REVEAL_ALL_SELECTIONS_COMMAND,
 ]);
