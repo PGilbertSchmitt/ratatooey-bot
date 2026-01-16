@@ -153,6 +153,16 @@ class Client {
     );
   }
 
+  async getMemberHistories(members: string[]): Promise<SenderReceiverPairs> {
+    const memStr = members.map(mem => `'${mem}'`).join(',');
+    return this._all(
+      'SELECT * FROM memberships WHERE sender_id IN (?) AND receiver_id IN (?)',
+      (row: any) => [row.sender_id, row.receiver_id],
+      memStr,
+      memStr,
+    );
+  }
+
   private async _get<T>(
     query: string,
     mapper: (row: any) => T,

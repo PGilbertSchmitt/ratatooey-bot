@@ -1,5 +1,4 @@
-import { times, toPairs, zip } from 'ramda';
-import { shuffle } from './random-selection';
+import { zip } from 'ramda';
 import { SenderReceiverPairs } from './db-client';
 
 type Tallies = Record<string, Record<string, number>>;
@@ -104,15 +103,3 @@ const allDerangements = (input: string[]): Array<string[]> => {
 
   return results;
 };
-
-// (() => {
-//   const priorSelections = createPriors(20);
-
-//   const start = performance.now();
-//   const [derangement, score] = bestSelection(currentMembers, priorSelections);
-//   const end = performance.now();
-//   console.log(
-//     `Took ${Math.round(end - start)}ms to generate best derangement for ${currentMembers.length} members`,
-//   );
-//   console.log(`Best option was [${derangement.join(', ')}] with score: ${score}`);
-// })();

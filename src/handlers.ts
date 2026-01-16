@@ -1,3 +1,4 @@
+import { magicSelection } from './magic-selection';
 import {
   ButtonStyleTypes,
   MessageComponent,
@@ -77,6 +78,7 @@ const rotationMessage = (
   selectionType: SelectionType,
   rotationId: string,
   members?: string[],
+  full: boolean = false,
 ): MessageComponent[] => {
   const topText: MessageComponent = {
     type: MessageComponentTypes.TEXT_DISPLAY,
@@ -92,6 +94,7 @@ const rotationMessage = (
         custom_id: `${Names.ACTION_JOIN_ROTATION}:${rotationId}`,
         label: 'Join',
         style: ButtonStyleTypes.PRIMARY,
+        disabled: full,
       },
       {
         type: MessageComponentTypes.BUTTON,
@@ -124,6 +127,14 @@ const rotationMessage = (
     components.push({
       type: MessageComponentTypes.TEXT_DISPLAY,
       content: '_Cannot start until at least 3 members have joined._',
+    });
+  }
+
+  if (full) {
+    components.push({
+      type: MessageComponentTypes.TEXT_DISPLAY,
+      content:
+        "_Magic rotations can't have more than 9 members (for silly math reasons)._",
     });
   }
 
@@ -173,9 +184,9 @@ export const handleNewRotation = async (
   }
 
   // Temp while they're implemented
-  if (selectionType !== 'auto') {
+  if (selectionType === 'manual') {
     throw new StructuredErrorResponse(
-      `Currenly, only Automatic rotation is supported (check back soon!)`,
+      'Currenly, only _**Automatic**_ and _**AutoMagic**_ rotation is supported (check back soon!)',
     );
   }
 
@@ -348,15 +359,23 @@ export const handleJoinRotation = async (
     );
   }
 
+  const isMagic = currentRotation.selectionType === SelectionType.MAGIC;
+
+  if (isMagic && members.length > 8) {
+    throw new StructuredErrorResponse('Magic rotation member limit reached');
+  }
+
   await db.addMember(rotationId, userId);
 
-  // return textMessage('Woo!');
   return wrapChannelMessageUpdate(
     rotationMessage(
       currentRotation.initiatorId,
       currentRotation.selectionType,
       currentRotation.id,
       await db.getMembers(rotationId),
+
+      // Limit is 9, and the `members` variable doesn't include the new member yet.
+      isMagic && members.length === 8,
     ),
   );
 };
@@ -399,6 +418,16 @@ export const handleStartRotation = async (
           rotationDoneMessage(initiatorId, selectionType, id, members),
         );
       case SelectionType.MAGIC:
+        const previousHistory = await db.getMemberHistories(members);
+        const magicPairs = magicSelection(members, previousHistory);
+        await Promise.all(
+          magicPairs.map(([sender, receiver]) =>
+            db.addReceiver(rotationId, sender, receiver),
+          ),
+        );
+        return wrapChannelMessageUpdate(
+          rotationDoneMessage(initiatorId, selectionType, id, members),
+        );
       case SelectionType.MANUAL:
         return wrapChannelMessageUpdate([
           {

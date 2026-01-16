@@ -22,36 +22,3 @@ export const randomSelection = (memberIds: string[]): SenderReceiverPairs => {
     return [sender, receiver];
   });
 };
-
-/**
- * This code snippet can be used to show that a the automatic selection:
- * - is adequately random
- * - never assigns a member to themselves
- * - always assigns every member as a sender and a receiver (no one left out)
- */
-// (() => {
-//     const fakeMembers = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
-//     const allResults = times(() => {
-//         const result = autoSelection(fakeMembers);
-//         const resultMap = fromPairs(result);
-//         if (keys(resultMap).length !== fakeMembers.length) {
-//             throw `Bad result, missing key: ${result}`;
-//         }
-//         if (uniq(values(resultMap)).length !== fakeMembers.length) {
-//             throw `Bad result, missing value: ${result}`;
-//         }
-//         if (any(([k, v]) => k === v, result)) {
-//             throw `Bad result, self sending: ${result}`;
-//         }
-//         return resultMap;
-//     }, 10_000);
-//     const resultTallies = fromPairs(fakeMembers.map(sender => {
-//         const tally: Record<string, number> = {};
-//         for (const receiver of fakeMembers) {
-//             const receiverCount = allResults.filter(res => res[sender] === receiver).length;
-//             tally[receiver] = receiverCount;
-//         }
-//         return [sender, tally];
-//     }));
-//     console.log(resultTallies);
-// })();
