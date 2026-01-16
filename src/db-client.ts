@@ -30,6 +30,8 @@ export type MemberPair = {
   receiverId: string;
 };
 
+export type SenderReceiverPairs = Array<[string, string]>;
+
 class Client {
   private db: Database;
 
@@ -136,7 +138,7 @@ class Client {
       'SELECT * FROM memberships WHERE rotation_id = ? AND sender_id = ?',
       (row: any) => row.receiver_id as string,
       rotationId,
-      senderId
+      senderId,
     );
   }
 

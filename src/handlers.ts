@@ -16,7 +16,7 @@ import {
 import { Endpoints, Names } from './consts';
 import { discordRequest, hasAdminPermissions } from './utils';
 import { db, SelectionType } from './db-client';
-import { autoSelection } from './selection';
+import { randomSelection } from './random-selection';
 
 const textMessage = (content: string) =>
   wrapChannelMessage(
@@ -165,7 +165,7 @@ export const handleNewRotation = async (
   const guildId = getGuildId(body);
 
   const selectionType = body.data.options[0].value as SelectionType;
-  
+
   if (!['auto', 'manual', 'magic'].includes(selectionType)) {
     throw new StructuredErrorResponse(
       `Rotation type can only be 'auto', 'manual', or 'magic'. Instead, got '${selectionType}'`,
@@ -244,37 +244,49 @@ export const handleRevealAll = async (
   body: BaseInteraction,
 ): Promise<InteractionResponse> => {
   if (!hasAdminPermissions(body.member.permissions)) {
-    return wrapChannelMessage([
-      {
-        type: MessageComponentTypes.TEXT_DISPLAY,
-        content: 'Only an Admin can reveal the full list of receivers.',
-      }
-    ], true);
+    return wrapChannelMessage(
+      [
+        {
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content: 'Only an Admin can reveal the full list of receivers.',
+        },
+      ],
+      true,
+    );
   }
 
   const guildId = getGuildId(body);
   const lastInitiatedRotation = await db.getLastInitiatedRotation(guildId);
   if (!lastInitiatedRotation) {
-    return wrapChannelMessage([
-      {
-        type: MessageComponentTypes.TEXT_DISPLAY,
-        content: 'There are no inactive (started) rotations in the server.',
-      }
-    ], true);
+    return wrapChannelMessage(
+      [
+        {
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content: 'There are no inactive (started) rotations in the server.',
+        },
+      ],
+      true,
+    );
   }
 
   const pairs = await db.getAllSenderReceviers(lastInitiatedRotation.id);
-  return wrapChannelMessage([
-    {
-      type: MessageComponentTypes.TEXT_DISPLAY,
-      content: "The most recently started rotation has these pairs (sender -> receiver):",
-    },
-    ...pairs.map(({ sender, receiver }): MessageComponent => ({
-      type: MessageComponentTypes.TEXT_DISPLAY,
-      content: `<@${sender}> -> <@${receiver}>`,
-    })),
-  ], true);
-}
+  return wrapChannelMessage(
+    [
+      {
+        type: MessageComponentTypes.TEXT_DISPLAY,
+        content:
+          'The most recently started rotation has these pairs (sender -> receiver):',
+      },
+      ...pairs.map(
+        ({ sender, receiver }): MessageComponent => ({
+          type: MessageComponentTypes.TEXT_DISPLAY,
+          content: `<@${sender}> -> <@${receiver}>`,
+        }),
+      ),
+    ],
+    true,
+  );
+};
 
 type DeleteAction = {
   response: InteractionResponse;
@@ -377,16 +389,24 @@ export const handleStartRotation = async (
 
     switch (selectionType) {
       case SelectionType.AUTO:
-        const selectedPairs = autoSelection(members);
-        await Promise.all(selectedPairs.map(([sender, receiver]) => db.addReceiver(rotationId, sender, receiver)));
-        return wrapChannelMessageUpdate(rotationDoneMessage(initiatorId, selectionType, id, members));
+        const selectedPairs = randomSelection(members);
+        await Promise.all(
+          selectedPairs.map(([sender, receiver]) =>
+            db.addReceiver(rotationId, sender, receiver),
+          ),
+        );
+        return wrapChannelMessageUpdate(
+          rotationDoneMessage(initiatorId, selectionType, id, members),
+        );
       case SelectionType.MAGIC:
       case SelectionType.MANUAL:
-        return wrapChannelMessageUpdate([{
-          type: MessageComponentTypes.TEXT_DISPLAY,
-          content:
-            'Not implemented yet, only Automatic selection is currently available.',
-        }]);
+        return wrapChannelMessageUpdate([
+          {
+            type: MessageComponentTypes.TEXT_DISPLAY,
+            content:
+              'Not implemented yet, only Automatic selection is currently available.',
+          },
+        ]);
     }
   } else {
     return wrapChannelMessage(
@@ -420,7 +440,7 @@ export const handleRevealReceiver = async (
         content: receiverId
           ? `Your recipient is <@${receiverId}>`
           : 'You are not a member of this rotation',
-      }
+      },
     ],
     true,
   );

@@ -1,23 +1,26 @@
-import { any, fromPairs, keys, times, toPairs, uniq, values } from "ramda";
+import { SenderReceiverPairs } from './db-client';
 
-export type SenderReceiverPairs = Array<[string, string]>;
+export const shuffle = (memberIds: string[]) => {
+  const shuffledIds = memberIds.slice();
 
-export const autoSelection = (memberIds: string[]): SenderReceiverPairs => {
-    const shuffledIds = [...memberIds];
-    
-    // Time for a Knuth Shuffle
-    for (let i = 1; i < memberIds.length; i++) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const tmp = shuffledIds[i];
-        shuffledIds[i] = shuffledIds[j];
-        shuffledIds[j] = tmp;
-    }
+  // Time for a Knuth Shuffle
+  for (let i = 1; i < memberIds.length; i++) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = shuffledIds[i];
+    shuffledIds[i] = shuffledIds[j];
+    shuffledIds[j] = tmp;
+  }
 
-    const len = shuffledIds.length;
-    return shuffledIds.map((sender, i) => {
-        const receiver = shuffledIds[(i + 1) % len];
-        return [sender, receiver];
-    });
+  return shuffledIds;
+};
+
+export const randomSelection = (memberIds: string[]): SenderReceiverPairs => {
+  const shuffledIds = shuffle(memberIds);
+  const len = shuffledIds.length;
+  return shuffledIds.map((sender, i) => {
+    const receiver = shuffledIds[(i + 1) % len];
+    return [sender, receiver];
+  });
 };
 
 /**
@@ -52,4 +55,3 @@ export const autoSelection = (memberIds: string[]): SenderReceiverPairs => {
 //     }));
 //     console.log(resultTallies);
 // })();
-

@@ -96,7 +96,7 @@ app.post(
               return;
             }
             case Names.ACTION_REVEAL_RECEIVER: {
-              res.send(await handleRevealReceiver(body, rotationId))
+              res.send(await handleRevealReceiver(body, rotationId));
               return;
             }
             default: {
