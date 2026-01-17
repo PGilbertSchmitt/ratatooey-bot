@@ -2,9 +2,9 @@
 
 This is a simple bot for creating a Secret-Santa-style rotation in a Discord server. It has 3 modes:
 
-- **Random**: Everyone who joins a rotation is given the name of another user, but does not know who anyone else has received. This is a fully random selection.
-- **Manual**: Everyone sees all the names of people who have not been selected yet, and can choose one of them (but not themselves). Again, they cannot see who anyone else has selected. **(NOT IMPLEMENTED YET)**
-- ✨**Auto-Magic**✨: Similar to Automatic, but uses the past history of all members in the rotation to have the lowest rate of repeating sender-receiver pairs. For example, let's say you've been in several prior secret santas with 2 members: "Breebo Braggins" and "Gwanyalf the Gwuwu", and you've gotten Breebo as the recipient 3 times and never once gotten Gwanyalf. The Auto-magic process will prefer to give you Gwanyalf over Breebo. However, it considers the best selection for ALL rotation members collectively, so it's still possible to get Breebo if for example Breebo has gotten you 5 times and Gwayyalf has gotten Breebo 8 times. Due to technical limitations, this selection process is limited to 8 members.
+- **Random**: Everyone who joins a rotation is given the name of another user, but does not know who anyone else has received. This is a fully random selection. The selections are guaranteed to contain a single loop. If you consider one sender's recipient, then that recipient's recipient, on and on, you will reach every member of the rotation before getting back to the first sender.
+- **Manual**: Everyone sees all the names of people who have not been selected yet, and can choose one of them, but not themselves or someone who's already been selected. Again, they cannot see who anyone else has selected. **(NOT IMPLEMENTED YET)**
+- ✨**Magic**✨: Similar to Random, but uses the past history of all members in the rotation to have the lowest rate of repeating sender-receiver pairs. For example, let's say you've been in several prior secret santas with 2 members: "Breebo Braggins" and "Gwanyalf the Gwuwu", and you've gotten Breebo as the recipient 3 times and never once gotten Gwanyalf. The Magic process will prefer to give you Gwanyalf over Breebo. However, it considers the best selection for ALL rotation members collectively, so it's still possible to get Breebo if for example Breebo has gotten you 5 times and Gwayyalf has gotten Breebo 8 times. Due to [technical limitations](#reason-for-magic-limitation), this selection process is limited to 8 members. Another difference from the Random selection is that Magic selections don't guarantee a single loop of receivers. This is intentional, since if we limit ourselves only to a single loop, we could be missing out of arrangements that are better for as many people as possible.
 
 ## Commands
 
@@ -16,7 +16,7 @@ This generates an open rotation on the channel, which will have 3 options (in th
 ![alt text](images/new-rotation.png)
 
 - `Join` - Join this rotation as a member (limited to 8 members for Magic rotations). Any member of the server can join.
-- `Start` - This ends the pending status of the rotation, which effectively "finishes" it. Either the Admin or the initiator of the rotation can start it.
+- `Start` - This ends the pending status of the rotation, which effectively locks in the members. Either the Admin or the initiator of the rotation can start it.
 - `Delete` - Delete the pending rotation. Either the Admin or the initiator of the rotation can start it.
 
 If there is already a pending (unstarted) rotation on the server, this command will fail. The pending rotation will either need to be started or deleted first before a new one can be created.
@@ -55,9 +55,9 @@ Reveals the full list of sender/receiver pairs for the last started rotation. It
 
 This can only be run by an admin. If the initiator is not an admin, they will not be able to run this command.
 
-## Reason for Auto-Magic limitation:
+## Reason for Magic limitation:
 
-The time-complexity of my implementation of this is factorial because it considers all possible derangements of the list of members, then finds the one with the lowest score, which is a simple calculation of the sum of the occurances of all past sender-receiver pairs within a given selection. Since derangements grow factorially, this function gets very naughty _very quickly_. On my not-so-bad PC, this equates to a time of ~600ms for 10 members. I don't like that at all, so for the greatest chance of keeping things slim, I'm ensuring that no Auto-Magic rotation has more than 8 members.
+The time-complexity of my implementation of the magic selection process is factorial because it considers all possible [derangements](https://en.wikipedia.org/wiki/Derangement) of the list of members, then finds the one with the lowest score. This score is a simple calculation of the sum of the occurances of all past sender-receiver pairs within a given selection. Since derangements grow factorially, this function gets very naughty _very quickly_. On my not-so-bad PC, this equates to a time of ~600ms for 10 members. I don't like that at all, so for the greatest chance of keeping things slim, I'm ensuring that no Magic rotation has more than 8 members.
 
-The truth, however, is that I'm 100% positive that there's a better way to calculate the best derangement without brute force, I just couldn't figure it out quickly enough and wanted to get this bot off the ground. Also, the server I want to use this in only has 7 members at the moment, so this definitely isn't an issue yet.
+The truth, however, is that I'm 100% positive that there's a better way to calculate the best selection without brute force, I just couldn't figure it out quickly enough and wanted to get this bot off the ground. Also, the server I want to use this in only has 7 members at the moment, so this definitely isn't an issue yet.
 
