@@ -1,4 +1,4 @@
-CREATE TABLE rotations (
+CREATE TABLE IF NOT EXISTS rotations (
     id TEXT PRIMARY KEY,
     done INTEGER NOT NULL, -- bool (0 for false and 1 for true)
     selection_type TEXT NOT NULL, -- auto, manual, or magic
@@ -8,7 +8,7 @@ CREATE TABLE rotations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE memberships (
+CREATE TABLE IF NOT EXISTS memberships (
     rotation_id TEXT REFERENCES rotations(id),
     sender_id TEXT NOT NULL,
     receiver_id TEXT

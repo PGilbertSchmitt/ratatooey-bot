@@ -11,8 +11,8 @@
     "proxy": "ngrok http 9001",
     "format": "prettier --write .",
     "test": "vitest",
-    "db:init": "sqlite3 ratatooey.db < init-db.sql",
-    "db:connect": "sqlite3 ratatooey.db",
+    "db:init": "sqlite3 data/ratatooey.db < init-db.sql",
+    "db:connect": "sqlite3 data/ratatooey.db",
     "select": "tsx src/user-graph.ts",
     "register": "tsx src/register-commands.ts"
   },

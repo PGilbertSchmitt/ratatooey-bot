@@ -1,0 +1,28 @@
+services:
+  ratatooey:
+    build: .
+    container_name: rat-bot
+    ports:
+      - 9001:9001
+    restart: unless-stopped
+    networks:
+      - rat_net
+    volumes:
+      - ./data:/app/data
+
+  ngrok:
+    image: ngrok/ngrok:alpine
+    container_name: rat_proxy
+    restart: unless-stopped
+    env_file: ".env"
+    command: http ratatooey:9001
+    ports:
+      - 4040:4040
+    networks:
+      - rat_net
+    depends_on:
+      - ratatooey
+
+networks:
+  rat_net:
+    driver: bridge

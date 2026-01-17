@@ -1,6 +1,7 @@
 import { Command, CommandOptionType, CommandType } from './types/command-types';
 import { discordRequest } from './utils';
 import { Endpoints, Names } from './consts';
+import { SelectionType } from './db-client';
 
 const NEW_ROTATION_COMMAND: Command = {
   name: Names.NEW_ROTATION,
@@ -16,16 +17,16 @@ const NEW_ROTATION_COMMAND: Command = {
       required: true,
       choices: [
         {
-          name: 'Automatic',
-          value: 'auto',
+          name: 'Random',
+          value: SelectionType.RANDOM,
         },
         {
           name: 'Manual',
-          value: 'manual',
+          value: SelectionType.MANUAL,
         },
         {
-          name: 'Automagic',
-          value: 'magic',
+          name: 'Magic',
+          value: SelectionType.MAGIC,
         },
       ],
     },

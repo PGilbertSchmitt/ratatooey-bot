@@ -14,10 +14,11 @@ import {
   CommandInteraction,
   MessageComponentInteraction,
 } from './types/interaction-types';
-import { Endpoints, Names } from './consts';
+import { Endpoints, MAGIC_LIMIT, Names } from './consts';
 import { discordRequest, hasAdminPermissions } from './utils';
 import { db, SelectionType } from './db-client';
 import { randomSelection } from './random-selection';
+import { values } from 'ramda';
 
 const textMessage = (content: string) =>
   wrapChannelMessage(
@@ -82,7 +83,7 @@ const rotationMessage = (
 ): MessageComponent[] => {
   const topText: MessageComponent = {
     type: MessageComponentTypes.TEXT_DISPLAY,
-    content: `<@${initiatorId}> has started ${selectionType === 'auto' ? 'an' : 'a'} ${selectionType} rotation`,
+    content: `<@${initiatorId}> has started ${selectionType === SelectionType.RANDOM ? 'an' : 'a'} ${selectionType} rotation`,
   };
 
   const startEnabled = !!members && members.length > 2;
@@ -149,7 +150,7 @@ const rotationDoneMessage = (
 ): MessageComponent[] => [
   {
     type: MessageComponentTypes.TEXT_DISPLAY,
-    content: `<@${initiatorId}> has started ${selectionType === 'auto' ? 'an' : 'a'} ${selectionType} rotation`,
+    content: `<@${initiatorId}> has started ${selectionType === SelectionType.RANDOM ? 'an' : 'a'} ${selectionType} rotation`,
   },
   {
     type: MessageComponentTypes.TEXT_DISPLAY,
@@ -177,14 +178,14 @@ export const handleNewRotation = async (
 
   const selectionType = body.data.options[0].value as SelectionType;
 
-  if (!['auto', 'manual', 'magic'].includes(selectionType)) {
+  if (!values(SelectionType).includes(selectionType)) {
     throw new StructuredErrorResponse(
-      `Rotation type can only be 'auto', 'manual', or 'magic'. Instead, got '${selectionType}'`,
+      `Rotation type can only be 'random', 'manual', or 'magic'. Instead, got '${selectionType}'`,
     );
   }
 
-  // Temp while they're implemented
-  if (selectionType === 'manual') {
+  // Temp since it's not yet implemented
+  if (selectionType === SelectionType.MANUAL) {
     throw new StructuredErrorResponse(
       'Currenly, only _**Automatic**_ and _**AutoMagic**_ rotation is supported (check back soon!)',
     );
@@ -360,12 +361,14 @@ export const handleJoinRotation = async (
   }
 
   const isMagic = currentRotation.selectionType === SelectionType.MAGIC;
+  let memberCount = members.length;
 
-  if (isMagic && members.length > 8) {
+  if (isMagic && memberCount >= MAGIC_LIMIT) {
     throw new StructuredErrorResponse('Magic rotation member limit reached');
   }
 
   await db.addMember(rotationId, userId);
+  memberCount++;
 
   return wrapChannelMessageUpdate(
     rotationMessage(
@@ -374,8 +377,7 @@ export const handleJoinRotation = async (
       currentRotation.id,
       await db.getMembers(rotationId),
 
-      // Limit is 9, and the `members` variable doesn't include the new member yet.
-      isMagic && members.length === 8,
+      isMagic && memberCount >= MAGIC_LIMIT,
     ),
   );
 };
@@ -407,7 +409,7 @@ export const handleStartRotation = async (
     await db.startRotation(rotationId);
 
     switch (selectionType) {
-      case SelectionType.AUTO:
+      case SelectionType.RANDOM:
         const selectedPairs = randomSelection(members);
         await Promise.all(
           selectedPairs.map(([sender, receiver]) =>

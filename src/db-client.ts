@@ -2,7 +2,7 @@ import Sqlite, { Database } from 'sqlite3';
 import { ValueOf } from './utils';
 
 export const SelectionType = {
-  AUTO: 'auto',
+  RANDOM: 'random',
   MANUAL: 'manual',
   MAGIC: 'magic',
 } as const;
@@ -36,7 +36,7 @@ class Client {
   private db: Database;
 
   constructor() {
-    this.db = new Sqlite.Database('ratatooey.db');
+    this.db = new Sqlite.Database('data/ratatooey.db');
   }
 
   async createRotation(

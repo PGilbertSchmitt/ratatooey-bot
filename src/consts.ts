@@ -25,3 +25,5 @@ export const Endpoints = {
   MESSAGE: (token: string, messageId: string) =>
     `webhooks/${Env.APP_ID}/${token}/messages/${messageId}`,
 };
+
+export const MAGIC_LIMIT = 8;
