@@ -55,6 +55,71 @@ Reveals the full list of sender/receiver pairs for the last started rotation. It
 
 This can only be run by an admin. If the initiator is not an admin, they will not be able to run this command.
 
+## Installation
+
+Before anything else, if you're running this bot as intended, you will need [`docker`](https://www.docker.com/) installed.
+
+In order to set up the service, you need to [follow the steps](https://discord.com/developers/docs/quick-start/getting-started) to create a Discord bot. Once you have that, you need to provide some details in an `.env` file in the top level of this repository with these values:
+```ENV
+APP_ID=<value goes here>
+DISCORD_TOKEN=<value goes here>
+PUBLIC_KEY=<value goes here>
+```
+
+- The `APP_ID` is the `Application ID` found on the "General Information" tab of your [application page](https://discord.com/developers/applications) on the Discord Developer portal. The `PUBLIC_KEY` is also found on this page, conveniently titled "Public Key".
+- The `DISCORD_TOKEN` is generated on the "Bot" tab of the application page. These tokens can only be viewed once the moment you create it, so you have to create (or reset it), then save it in the ENV file.
+
+It's worth pointing out if you're not familiar with token-based authentication is:
+- The `APP_ID` and the `PUBLIC_KEY` are not necessarily secrets. The `APP_ID` is needed to identify your bot, and the `PUBLIC_KEY` is meant to craft requests that can only be read by your bot.
+- The `DISCORD_TOKEN` is a SECRET. If someone else has this, they can create a service that acts as your bot, which _n'est pas bon_.
+
+This repository comes equiped with a Docker Compose configuration that runs an [ngrok](https://ngrok.com/) reverse proxy, which is fancy speak for _"a service that gives my locally hosted repository a URL that the Discord API can make requests to"_. The alternative is that I pay money to host the bot somewhere like Digital Ocean, and I didn't want to do that; The free tier of `ngrok` is more than good enough for my small use-case. If I were needing this bot to support many servers and handle a LOT of traffic, I would consider hosting my bot elsewhere.
+
+If you want to use `ngrok` too, you will need to add these values to the `.env` file:
+```ENV
+NGROK_AUTHTOKEN=<value goes here>
+NGROK_LISTEN_ADDR=http 9001
+```
+
+The `NGROK_AUTHTOKEN` comes from your `ngrok` [dashboard](https://dashboard.ngrok.com/get-started/your-authtoken) (it's free to make an account). The `NGROK_LISTEN_ADDR` value is hard set to the port of the bot service. If you change the port that the bot listens on, be sure to change this ENV variable (as well as the relevant configuration in the [docker compose file](./docker-compose.yaml)).
+
+Once you have all that, you can run your bot with a few commands. First, you need to initialize the database. This bot saves its data in a SqliteDB, so you should have `sqlite3` installed. Then you can initialize the db with:
+```bash
+$ sqlite3 data/ratatooey.db < init-db.sql
+```
+Now that that's settled, the containers can be built and run:
+```bash
+$ docker compose build
+$ docker compose up -d
+```
+
+On the Discord side, you will need to do 2 things:
+### 1. Register the commands.
+
+You will need `npm` installed, which will allow you to run this command:
+```bash
+$ npm run register
+```
+If you don't want to install `npm` on your host machine, you could also run it from the docker container, which already has `npm`:
+```bash
+# This puts you into a container running the bot service image.
+docker run -it ratatooey-bot-ratatooey:latest bash
+
+# This is run from the container
+npm run register
+```
+### 2. Add the bot to the server of your choice.
+
+This can be accomplished by:
+1. Nagivating to the "Oauth" tab of the Discord application page for your bot
+2. Scrolling to the "OAuth2 URL Generator"
+3. Selecting the `applications.commands` and `bot` scopes
+4. Selecting `Send Messages` under the bot permissions
+5. Ensuring the Integration Type is "Guild Install"
+6. Navigating to the URL in the "Generated URL" box (just copy and paste into your browser).
+
+This will open Discord and let you select the Discord Server to add the bot to.
+
 ## Reason for Magic limitation:
 
 The time-complexity of my implementation of the magic selection process is factorial because it considers all possible [derangements](https://en.wikipedia.org/wiki/Derangement) of the list of members, then finds the one with the lowest score. This score is a simple calculation of the sum of the occurances of all past sender-receiver pairs within a given selection. Since derangements grow factorially, this function gets very naughty _very quickly_. On my not-so-bad PC, this equates to a time of ~600ms for 10 members. I don't like that at all, so for the greatest chance of keeping things slim, I'm ensuring that no Magic rotation has more than 8 members.

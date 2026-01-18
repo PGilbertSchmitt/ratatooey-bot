@@ -12,7 +12,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:alpine
-    container_name: rat_proxy
+    container_name: rat-proxy
     restart: unless-stopped
     env_file: ".env"
     command: http ratatooey:9001
